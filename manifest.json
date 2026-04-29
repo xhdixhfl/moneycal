@@ -2,7 +2,7 @@
   "name": "머니캘린더",
   "short_name": "머니캘린더",
   "description": "캘린더 기반 가계부 앱",
-  "start_url": "/index.html",
+  "start_url": "/moneycal/index.html",
   "display": "standalone",
   "background_color": "#F7F7F5",
   "theme_color": "#534AB7",
