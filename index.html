@@ -257,41 +257,7 @@
 const TX_KEY     = 'mc_txns_v3';
 const BUDGET_KEY = 'mc_budgets_v3';
 
-let txns = JSON.parse(localStorage.getItem(TX_KEY) || 'null');
-if (!txns) {
-  const now = new Date();
-  const y = now.getFullYear();
-  const cm = String(now.getMonth()+1).padStart(2,'0');
-  const pm = String(now.getMonth()).padStart(2,'0') || '01';
-  txns = [
-    // 이번달
-    {id:uid(),date:`${y}-${cm}-01`,type:'income',       amount:3200000,desc:'월급',     category:'급여'},
-    {id:uid(),date:`${y}-${cm}-02`,type:'expense_cash', amount:12000,  desc:'점심',     category:'식비'},
-    {id:uid(),date:`${y}-${cm}-03`,type:'expense_card', amount:45000,  desc:'장보기',   category:'식비'},
-    {id:uid(),date:`${y}-${cm}-05`,type:'expense_cash', amount:8500,   desc:'버스',     category:'교통'},
-    {id:uid(),date:`${y}-${cm}-07`,type:'expense_card', amount:89000,  desc:'쇼핑몰',   category:'쇼핑'},
-    {id:uid(),date:`${y}-${cm}-08`,type:'expense_cash', amount:15000,  desc:'카페',     category:'식비'},
-    {id:uid(),date:`${y}-${cm}-10`,type:'expense_card', amount:120000, desc:'외식',     category:'식비'},
-    {id:uid(),date:`${y}-${cm}-12`,type:'income',       amount:500000, desc:'프리랜서', category:'기타'},
-    {id:uid(),date:`${y}-${cm}-14`,type:'expense_card', amount:35000,  desc:'영화',     category:'문화/여가'},
-    {id:uid(),date:`${y}-${cm}-15`,type:'expense_cash', amount:200000, desc:'병원',     category:'의료'},
-    {id:uid(),date:`${y}-${cm}-17`,type:'expense_card', amount:55000,  desc:'배달',     category:'식비'},
-    {id:uid(),date:`${y}-${cm}-19`,type:'expense_card', amount:180000, desc:'의류',     category:'쇼핑'},
-    {id:uid(),date:`${y}-${cm}-20`,type:'expense_cash', amount:22000,  desc:'교통카드', category:'교통'},
-    {id:uid(),date:`${y}-${cm}-22`,type:'expense_cash', amount:45000,  desc:'회식',     category:'식비'},
-    {id:uid(),date:`${y}-${cm}-24`,type:'expense_card', amount:30000,  desc:'도서',     category:'문화/여가'},
-    {id:uid(),date:`${y}-${cm}-25`,type:'expense_card', amount:68000,  desc:'마트',     category:'식비'},
-    // 지난달
-    {id:uid(),date:`${y}-${pm}-01`,type:'income',       amount:3200000,desc:'월급',     category:'급여'},
-    {id:uid(),date:`${y}-${pm}-05`,type:'expense_card', amount:95000,  desc:'마트',     category:'식비'},
-    {id:uid(),date:`${y}-${pm}-10`,type:'expense_cash', amount:32000,  desc:'점심',     category:'식비'},
-    {id:uid(),date:`${y}-${pm}-15`,type:'income',       amount:300000, desc:'부업',     category:'기타'},
-    {id:uid(),date:`${y}-${pm}-18`,type:'expense_card', amount:210000, desc:'의류',     category:'쇼핑'},
-    {id:uid(),date:`${y}-${pm}-22`,type:'expense_cash', amount:55000,  desc:'교통비',   category:'교통'},
-    {id:uid(),date:`${y}-${pm}-25`,type:'expense_card', amount:75000,  desc:'외식',     category:'식비'},
-  ];
-  saveTxns();
-}
+let txns = JSON.parse(localStorage.getItem(TX_KEY) || 'null') || [];
 
 let budgets = JSON.parse(localStorage.getItem(BUDGET_KEY) || 'null') || { week:350000, month:1500000, year:18000000 };
 
@@ -492,13 +458,16 @@ function renderTxList(prefix) {
         const isCard = tx.type==='expense_card';
         const color  = isInc ? '#1D9E75' : isCard ? '#534AB7' : '#D85A30';
         const iconBg = isInc ? 'rgba(29,158,117,.12)' : isCard ? 'rgba(83,74,183,.12)' : 'rgba(216,90,48,.12)';
-        return `<div class="tx-item">
+        return `<div class="tx-item" style="position:relative;">
           <div class="tx-icon" style="background:${iconBg};">${CAT_ICONS[tx.category]||'📌'}</div>
           <div class="tx-info">
             <div class="tx-desc">${tx.desc}${isCard?`<span class="tx-badge">신카</span>`:''}</div>
             <div class="tx-cat">${tx.category}</div>
           </div>
-          <div class="tx-amount" style="color:${color};">${isInc?'+':'-'}${fmt(tx.amount)}원</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="tx-amount" style="color:${color};">${isInc?'+':'-'}${fmt(tx.amount)}원</div>
+            <button onclick="deleteTx('${tx.id}')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:2px 4px;line-height:1;border-radius:4px;" title="삭제">✕</button>
+          </div>
         </div>`;
       }).join('')}
     </div>`;
@@ -902,6 +871,14 @@ function renderSettings() {
 // ════════════════════════════════════════════
 //  ACTIONS
 // ════════════════════════════════════════════
+
+function deleteTx(id) {
+  if (!confirm('이 내역을 삭제할까요?')) return;
+  txns = txns.filter(t => t.id !== id);
+  saveTxns();
+  render();
+}
+
 function changeMonth(d) {
   calMonth += d;
   if (calMonth < 0)  { calMonth=11; calYear--; }
@@ -988,9 +965,7 @@ render();
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('SW registered'))
-      .catch(err => console.log('SW error', err));
+    navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
 </script>
